@@ -17,6 +17,7 @@ import uploadRoutes from './routes/uploadRoutes.js';
 import { errorHandler, notFound } from './middleware/errorMiddleware.js';
 
 const app = express();
+app.set('trust proxy', 1);
 
 // ✅ Production-ready CORS
 const allowedOrigins = [
