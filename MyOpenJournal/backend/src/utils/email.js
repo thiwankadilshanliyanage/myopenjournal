@@ -1,7 +1,11 @@
 import nodemailer from "nodemailer";
+import dns from "dns";
+
+dns.setDefaultResultOrder("ipv4first");
 
 export const sendEmail = async (to, subject, text) => {
   try {
+
     console.log("EMAIL_USER loaded:", process.env.EMAIL_USER ? "YES" : "NO");
     console.log("EMAIL_PASS loaded:", process.env.EMAIL_PASS ? "YES" : "NO");
     console.log("Sending email to:", to);
@@ -11,13 +15,17 @@ export const sendEmail = async (to, subject, text) => {
       port: 587,
       secure: false,
       requireTLS: true,
-      connectionTimeout: 15000,
-      greetingTimeout: 15000,
-      socketTimeout: 15000,
+
+      family: 4, // ✅ FORCE IPV4
+
       auth: {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS,
       },
+
+      tls: {
+        rejectUnauthorized: false
+      }
     });
 
     const info = await transporter.sendMail({
@@ -27,10 +35,14 @@ export const sendEmail = async (to, subject, text) => {
       text,
     });
 
-    console.log("Email sent successfully:", info.messageId);
+    console.log("✅ Email sent:", info.messageId);
+
     return true;
+
   } catch (error) {
+
     console.error("❌ Email send error:", error);
+
     return false;
   }
 };
