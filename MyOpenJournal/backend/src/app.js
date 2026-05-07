@@ -21,26 +21,29 @@ const app = express();
 // ✅ Production-ready CORS
 const allowedOrigins = [
   'http://localhost:5173',
-  process.env.CLIENT_URL
+  process.env.CLIENT_URL,
+  'https://myopenjournal.netlify.app'
 ];
 
 app.use(
   cors({
-    origin: function (origin, callback) {
-
-      // allow Postman / mobile apps / server-side
+    origin(origin, callback) {
       if (!origin) return callback(null, true);
 
-      if (allowedOrigins.includes(origin)) {
+      const isNetlifyPreview =
+        origin.includes('--myopenjournal.netlify.app') ||
+        origin.endsWith('.netlify.app');
+
+      if (allowedOrigins.includes(origin) || isNetlifyPreview) {
         return callback(null, true);
       }
 
-      return callback(new Error('CORS not allowed'));
+      console.log('Blocked by CORS:', origin);
+      return callback(new Error(`CORS not allowed: ${origin}`));
     },
     credentials: true
   })
 );
-
 app.use(helmet());
 
 app.use(express.json({
