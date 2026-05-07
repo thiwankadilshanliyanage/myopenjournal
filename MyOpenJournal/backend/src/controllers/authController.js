@@ -14,11 +14,16 @@ const authResponse = (user) => ({
 
 // ✅ REGISTER
 export const register = asyncHandler(async (req, res) => {
+
   const { name, email, password } = req.body;
 
   const exists = await User.findOne({ email });
+
   if (exists) {
-    return res.status(409).json({ message: 'Email already exists' });
+    return res.status(409).json({
+      success: false,
+      message: 'Email already exists'
+    });
   }
 
   const token = crypto.randomBytes(32).toString("hex");
@@ -30,12 +35,19 @@ export const register = asyncHandler(async (req, res) => {
     emailVerificationToken: token
   });
 
-  const verifyUrl = `${process.env.CLIENT_URL}/verify-email/${token}`;
+  const verifyUrl =
+    `${process.env.CLIENT_URL}/verify-email/${token}`;
 
-  await sendEmail(user.email, "Verify Email", verifyUrl);
+  // send email safely
+  await sendEmail(
+    user.email,
+    "Verify Your Email",
+    `Click the link below to verify your email:\n\n${verifyUrl}`
+  );
 
-  res.status(201).json({
-    message: "Registered successfully. Check your email."
+  return res.status(201).json({
+    success: true,
+    message: "Registration successful. Please verify your email."
   });
 });
 
