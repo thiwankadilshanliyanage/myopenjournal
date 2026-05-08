@@ -6,8 +6,10 @@ import AuthCard from '../../components/forms/AuthCard';
 import { authApi } from '../../api/authApi';
 import { useAuth } from '../../context/AuthContext';
 import { useSnackbar } from '../../context/SnackbarContext';
+import { useLanguage } from '../../context/LanguageContext';
 
 export default function LoginPage() {
+  const { t } = useLanguage();
   const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm();
   const { login } = useAuth();
   const { showSnackbar } = useSnackbar();
@@ -16,15 +18,11 @@ export default function LoginPage() {
   const onSubmit = async (values) => {
     try {
       const { data } = await authApi.login(values);
-
-      // ✅ FIX HERE
       login(data.token, data.user);
-
-      showSnackbar("Login successful", "success");
-
+      showSnackbar(t('loginSuccessful'), 'success');
       navigate(data.user.role === 'admin' ? '/admin' : '/profile');
     } catch (err) {
-      showSnackbar(err.response?.data?.message || 'Login failed', 'error');
+      showSnackbar(err.response?.data?.message || t('loginFailed'), 'error');
     }
   };
 
@@ -33,37 +31,23 @@ export default function LoginPage() {
       <AuthCard>
         <Stack spacing={3} component="form" onSubmit={handleSubmit(onSubmit)}>
           <Stack spacing={1}>
-            <Typography variant="h4">ログイン</Typography>
-            <Typography color="text.secondary">
-              Welcome back to MyOpenJournal.
-            </Typography>
+            <Typography variant="h4">{t('login')}</Typography>
+            <Typography color="text.secondary">{t('welcomeBack')}</Typography>
           </Stack>
 
-          <TextField
-            label="Email"
-            {...register('email', { required: 'Email is required' })}
-            error={!!errors.email}
-            helperText={errors.email?.message}
-          />
-
-          <TextField
-            label="Password"
-            type="password"
-            {...register('password', { required: 'Password is required' })}
-            error={!!errors.password}
-            helperText={errors.password?.message}
-          />
+          <TextField label={t('username')} {...register('username', { required: t('usernameRequired') })} error={!!errors.username} helperText={errors.username?.message} />
+          <TextField label={t('password')} type="password" {...register('password', { required: t('passwordRequired') })} error={!!errors.password} helperText={errors.password?.message} />
 
           <Button type="submit" variant="contained" disabled={isSubmitting}>
-            Login
+            {t('login')}
           </Button>
 
           <Button component={RouterLink} to="/forgot-password">
-            Forgot password?
+            {t('forgotPassword')}
           </Button>
 
           <Button component={RouterLink} to="/register">
-            Create account
+            {t('noAccount')}
           </Button>
         </Stack>
       </AuthCard>

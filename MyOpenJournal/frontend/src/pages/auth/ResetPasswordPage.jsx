@@ -1,26 +1,38 @@
 import { Button, Stack, TextField, Typography } from '@mui/material';
+import { Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
-import { useNavigate, useParams } from 'react-router-dom';
 import PageContainer from '../../components/common/PageContainer';
 import AuthCard from '../../components/forms/AuthCard';
 import { authApi } from '../../api/authApi';
 import { useSnackbar } from '../../context/SnackbarContext';
+import { useLanguage } from '../../context/LanguageContext';
 
 export default function ResetPasswordPage() {
-  const { token } = useParams();
-  const { register, handleSubmit, watch, formState: { errors, isSubmitting } } = useForm();
-  const { showSnackbar } = useSnackbar();
+  const { t } = useLanguage();
+  const location = useLocation();
   const navigate = useNavigate();
+  const { showSnackbar } = useSnackbar();
+  const { register, handleSubmit, formState: { isSubmitting } } = useForm();
+
+  const data = location.state;
+
+  if (!data) {
+    return <Navigate to="/forgot-password" replace />;
+  }
 
   const onSubmit = async (values) => {
     try {
-      const { data } = await authApi.resetPassword(token, {
+      await authApi.resetPassword({
+        username: data.username,
+        secretAnswer1: values.secretAnswer1,
+        secretAnswer2: values.secretAnswer2,
         password: values.password
       });
-      showSnackbar(data.message, 'success');
+
+      showSnackbar(t('passwordResetSuccessful'), 'success');
       navigate('/login');
     } catch (err) {
-      showSnackbar(err.response?.data?.message || 'Reset failed', 'error');
+      showSnackbar(err.response?.data?.message || t('resetFailed'), 'error');
     }
   };
 
@@ -28,25 +40,21 @@ export default function ResetPasswordPage() {
     <PageContainer maxWidth="sm" sx={{ minHeight: '70vh', display: 'grid', placeItems: 'center' }}>
       <AuthCard>
         <Stack spacing={3} component="form" onSubmit={handleSubmit(onSubmit)}>
-          <Typography variant="h4">新しいパスワード</Typography>
-          <TextField
-            label="New Password"
-            type="password"
-            {...register('password', { minLength: { value: 6, message: 'Minimum 6 characters' } })}
-            error={!!errors.password}
-            helperText={errors.password?.message}
-          />
-          <TextField
-            label="Confirm Password"
-            type="password"
-            {...register('confirmPassword', {
-              validate: (value) => value === watch('password') || 'Passwords do not match'
-            })}
-            error={!!errors.confirmPassword}
-            helperText={errors.confirmPassword?.message}
-          />
+          <Stack spacing={1}>
+            <Typography variant="h4">{t('resetPassword')}</Typography>
+            <Typography color="text.secondary">{t('secretResetSubtitle')}</Typography>
+          </Stack>
+
+          <Typography fontWeight={700}>{data.secretQuestion1}</Typography>
+          <TextField label={t('answer1')} {...register('secretAnswer1', { required: true })} />
+
+          <Typography fontWeight={700}>{data.secretQuestion2}</Typography>
+          <TextField label={t('answer2')} {...register('secretAnswer2', { required: true })} />
+
+          <TextField label={t('newPassword')} type="password" {...register('password', { required: true })} />
+
           <Button type="submit" variant="contained" disabled={isSubmitting}>
-            Reset Password
+            {t('resetPassword')}
           </Button>
         </Stack>
       </AuthCard>

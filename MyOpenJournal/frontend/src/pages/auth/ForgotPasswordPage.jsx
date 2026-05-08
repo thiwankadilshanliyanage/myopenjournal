@@ -1,20 +1,24 @@
 import { Button, Stack, TextField, Typography } from '@mui/material';
 import { useForm } from 'react-hook-form';
+import { useNavigate } from 'react-router-dom';
 import PageContainer from '../../components/common/PageContainer';
 import AuthCard from '../../components/forms/AuthCard';
 import { authApi } from '../../api/authApi';
 import { useSnackbar } from '../../context/SnackbarContext';
+import { useLanguage } from '../../context/LanguageContext';
 
 export default function ForgotPasswordPage() {
-  const { register, handleSubmit, formState: { isSubmitting } } = useForm();
+  const { t } = useLanguage();
+  const { register, handleSubmit } = useForm();
   const { showSnackbar } = useSnackbar();
+  const navigate = useNavigate();
 
   const onSubmit = async (values) => {
     try {
       const { data } = await authApi.forgotPassword(values);
-      showSnackbar(data.message, 'success');
+      navigate('/reset-password', { state: data });
     } catch (err) {
-      showSnackbar(err.response?.data?.message || 'Request failed', 'error');
+      showSnackbar(err.response?.data?.message || t('requestFailed'), 'error');
     }
   };
 
@@ -22,13 +26,13 @@ export default function ForgotPasswordPage() {
     <PageContainer maxWidth="sm" sx={{ minHeight: '70vh', display: 'grid', placeItems: 'center' }}>
       <AuthCard>
         <Stack spacing={3} component="form" onSubmit={handleSubmit(onSubmit)}>
-          <Typography variant="h4">パスワード再設定</Typography>
-          <Typography color="text.secondary">
-            Enter your email and we will prepare a password reset flow.
-          </Typography>
-          <TextField label="Email" {...register('email')} />
-          <Button type="submit" variant="contained" disabled={isSubmitting}>
-            Send reset link
+          <Typography variant="h4">{t('forgotPassword')}</Typography>
+          <Typography color="text.secondary">{t('resetPasswordSubtitle')}</Typography>
+
+          <TextField label={t('username')} {...register('username', { required: true })} />
+
+          <Button type="submit" variant="contained">
+            {t('continue')}
           </Button>
         </Stack>
       </AuthCard>
