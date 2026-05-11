@@ -59,6 +59,8 @@ export default function BlogDetailPage() {
     if (!post?._id) return;
 
     const loadComments = async () => {
+      setCommentLoading(true);
+
       try {
         const { data } = await commentApi.getComments(post._id);
         setComments(data.data.comments || []);
@@ -71,6 +73,25 @@ export default function BlogDetailPage() {
 
     loadComments();
   }, [post?._id, showSnackbar]);
+
+  const updateCommentInTree = (items, commentId, updatedContent) =>
+    items.map((item) => {
+      if (item._id === commentId) {
+        return {
+          ...item,
+          content: updatedContent
+        };
+      }
+
+      if (item.replies?.length) {
+        return {
+          ...item,
+          replies: updateCommentInTree(item.replies, commentId, updatedContent)
+        };
+      }
+
+      return item;
+    });
 
   const handleLike = async () => {
     if (!isAuthenticated) {
@@ -128,11 +149,30 @@ export default function BlogDetailPage() {
       showSnackbar(data.message || 'Comment added successfully', 'success');
       return true;
     } catch (err) {
-      console.log('STATUS:', err.response?.status);
-      console.log('MESSAGE:', err.response?.data?.message);
-      console.log('ERRORS:', err.response?.data?.errors);
-
       showSnackbar(err.response?.data?.message || 'Comment failed', 'error');
+      return false;
+    }
+  };
+
+  const handleEditComment = async (commentId, content) => {
+    if (!content.trim()) {
+      showSnackbar('Comment cannot be empty', 'error');
+      return false;
+    }
+
+    try {
+      const { data } = await commentApi.updateComment(commentId, {
+        content: content.trim()
+      });
+
+      setComments((prev) =>
+        updateCommentInTree(prev, commentId, data.data.comment.content)
+      );
+
+      showSnackbar(data.message || 'Comment updated', 'success');
+      return true;
+    } catch (err) {
+      showSnackbar(err.response?.data?.message || 'Update failed', 'error');
       return false;
     }
   };
@@ -181,7 +221,10 @@ export default function BlogDetailPage() {
         />
 
         <Stack spacing={2}>
-          <Chip label={post.category?.name || 'Blog'} sx={{ alignSelf: 'flex-start' }} />
+          <Chip
+            label={post.category?.name || 'Blog'}
+            sx={{ alignSelf: 'flex-start' }}
+          />
 
           <Typography variant="h2" sx={{ fontSize: { xs: '2rem', md: '3rem' } }}>
             {post.title}
@@ -196,6 +239,7 @@ export default function BlogDetailPage() {
               <Typography fontWeight={700}>
                 {post.author?.name}
               </Typography>
+
               <Typography color="text.secondary">
                 {formatDate(post.createdAt)}
               </Typography>
@@ -233,6 +277,7 @@ export default function BlogDetailPage() {
               currentUser={user}
               onReply={handleCreateComment}
               onDelete={handleDeleteComment}
+              onEdit={handleEditComment}
             />
           ) : (
             <EmptySection
