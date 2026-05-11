@@ -1,7 +1,13 @@
 import { Stack } from '@mui/material';
 import CommentItem from './CommentItem';
 
-export default function CommentList({ comments, currentUser, onReply, onDelete }) {
+export default function CommentList({
+  comments,
+  currentUser,
+  onReply,
+  onDelete,
+  onEdit
+}) {
   return (
     <Stack spacing={1}>
       {comments.map((comment) => (
@@ -11,6 +17,7 @@ export default function CommentList({ comments, currentUser, onReply, onDelete }
           currentUser={currentUser}
           onReply={onReply}
           onDelete={onDelete}
+          onEdit={onEdit}
         />
       ))}
     </Stack>

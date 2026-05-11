@@ -1,6 +1,6 @@
 export const insertReplyIntoTree = (tree, parentId, reply) =>
   tree.map((node) => {
-    if (node._id === parentId) {
+    if (String(node._id) === String(parentId)) {
       return {
         ...node,
         replies: [...(node.replies || []), reply]
@@ -19,8 +19,10 @@ export const insertReplyIntoTree = (tree, parentId, reply) =>
 
 export const removeCommentFromTree = (tree, commentId) =>
   tree
-    .filter((node) => node._id !== commentId)
+    .filter((node) => String(node._id) !== String(commentId))
     .map((node) => ({
       ...node,
-      replies: node.replies?.length ? removeCommentFromTree(node.replies, commentId) : []
+      replies: node.replies?.length
+        ? removeCommentFromTree(node.replies, commentId)
+        : []
     }));
