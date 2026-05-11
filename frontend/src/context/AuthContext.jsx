@@ -33,13 +33,18 @@ export function AuthProvider({ children }) {
 
     try {
 
-      const { data } =
+      const response =
         await authApi.me();
 
-      // ✅ FIXED
-      setUser(data.data.user);
+      const currentUser =
+        response.data.user ||
+        response.data.data?.user;
 
-    } catch {
+      setUser(currentUser);
+
+    } catch (error) {
+
+      console.log(error);
 
       localStorage.removeItem(
         'sakura_note_token'
